@@ -15,6 +15,7 @@ import { useLocation } from "wouter";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const displayName = user?.name || "User";
   const [, setLocation] = useLocation();
 
   const { data: stats } = trpc.dashboard.stats.useQuery();
@@ -29,7 +30,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Welcome back, {user?.name || "User"}
+            Welcome back, {displayName}
           </h1>
           <p className="text-lg text-gray-600">
             Advanced plagiarism and AI content detection platform

@@ -26,7 +26,7 @@ export const appRouter = router({
   }),
 
   documents: router({
-    upload: protectedProcedure
+    upload: publicProcedure
       .input(z.object({
         filename: z.string(),
         fileType: z.string(),
@@ -41,7 +41,8 @@ export const appRouter = router({
           // Generate unique filename
           const fileExtension = path.extname(input.filename);
           const uniqueFilename = `${nanoid()}-${Date.now()}${fileExtension}`;
-          const s3Key = `documents/${ctx.user.id}/${uniqueFilename}`;
+          const userId = ctx.user?.id || 1; // Default user ID
+          const s3Key = `documents/${userId}/${uniqueFilename}`;
           
           // Upload to S3
           const { url } = await storagePut(s3Key, fileBuffer, input.fileType);
@@ -60,7 +61,7 @@ export const appRouter = router({
           
           // Create document record
           const result = await db.createDocument({
-            userId: ctx.user.id,
+            userId: userId,
             filename: uniqueFilename,
             originalFilename: input.filename,
             fileType: input.fileType,
@@ -83,11 +84,11 @@ export const appRouter = router({
         }
       }),
 
-    list: protectedProcedure.query(async ({ ctx }) => {
-      return await db.getUserDocuments(ctx.user.id);
+    list: publicProcedure.query(async () => {
+      return await db.getUserDocuments(1); // Default user
     }),
 
-    get: protectedProcedure
+    get: publicProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         return await db.getDocumentById(input.id);
@@ -95,7 +96,7 @@ export const appRouter = router({
   }),
 
   analysis: router({
-    create: protectedProcedure
+    create: publicProcedure
       .input(z.object({
         documentId: z.number(),
       }))
@@ -112,9 +113,10 @@ export const appRouter = router({
           }
           
           // Create analysis record
+          const userId = ctx.user?.id || 1; // Default user ID
           const analysisResult = await db.createAnalysis({
             documentId: input.documentId,
-            userId: ctx.user.id,
+            userId: userId,
             status: 'processing',
           });
           
@@ -180,7 +182,7 @@ export const appRouter = router({
         }
       }),
 
-    get: protectedProcedure
+    get: publicProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         const analysis = await db.getAnalysisById(input.id);
@@ -196,7 +198,7 @@ export const appRouter = router({
         };
       }),
 
-    getByDocument: protectedProcedure
+    getByDocument: publicProcedure
       .input(z.object({ documentId: z.number() }))
       .query(async ({ input }) => {
         const analysis = await db.getAnalysisByDocumentId(input.documentId);
@@ -212,15 +214,16 @@ export const appRouter = router({
         };
       }),
 
-    list: protectedProcedure.query(async ({ ctx }) => {
-      return await db.getUserAnalyses(ctx.user.id);
+    list: publicProcedure.query(async () => {
+      return await db.getUserAnalyses(1); // Default user
     }),
   }),
 
   dashboard: router({
-    stats: protectedProcedure.query(async ({ ctx }) => {
-      const documents = await db.getUserDocuments(ctx.user.id);
-      const analyses = await db.getUserAnalyses(ctx.user.id);
+    stats: publicProcedure.query(async () => {
+      const userId = 1; // Default user ID
+      const documents = await db.getUserDocuments(userId);
+      const analyses = await db.getUserAnalyses(userId);
       
       const completedAnalyses = analyses.filter(a => a.status === 'completed');
       

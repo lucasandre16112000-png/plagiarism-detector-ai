@@ -15,13 +15,11 @@ import {
 import { useLocation } from "wouter";
 
 export default function Home() {
-  const { user, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
 
-  if (isAuthenticated) {
-    setLocation("/dashboard");
-    return null;
-  }
+  // Redirect to dashboard directly
+  setLocation("/dashboard");
+  return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">

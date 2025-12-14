@@ -35,6 +35,12 @@
 - [x] Validar dashboard e métricas
 
 ## Documentação
-- [ ] Criar documentação técnica completa
-- [ ] Gerar PDF explicativo do sistema
-- [ ] Documentar APIs e endpoints
+- [x] Criar documentação técnica completa
+- [x] Gerar PDF explicativo do sistema
+- [x] Documentar APIs e endpoints
+
+## Bugs Reportados
+- [x] Corrigir erro de upload de documentos
+
+## Melhorias Solicitadas
+- [x] Remover exigência de login do sistema

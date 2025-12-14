@@ -105,7 +105,9 @@ export async function createDocument(doc: InsertDocument) {
   if (!db) throw new Error("Database not available");
   
   const result = await db.insert(documents).values(doc);
-  return result;
+  // Return the inserted document with ID
+  const insertedId = Number((result as any)[0]?.insertId || (result as any).insertId || 0);
+  return { insertId: insertedId, ...result };
 }
 
 export async function getDocumentById(id: number) {
@@ -143,7 +145,8 @@ export async function createAnalysis(analysis: InsertAnalysis) {
   if (!db) throw new Error("Database not available");
   
   const result = await db.insert(analyses).values(analysis);
-  return result;
+  const insertedId = Number((result as any)[0]?.insertId || (result as any).insertId || 0);
+  return { insertId: insertedId, ...result };
 }
 
 export async function getAnalysisById(id: number) {
