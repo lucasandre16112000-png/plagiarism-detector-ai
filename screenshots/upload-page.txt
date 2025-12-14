@@ -1,0 +1,9 @@
+Screenshot da página de upload salvo em:
+/home/ubuntu/screenshots/3000-iml3scixic8kk4c_2025-12-14_18-25-40_6305.webp
+
+Página de upload funcionando com:
+- Interface drag-and-drop profissional
+- Suporte para PDF, DOCX, TXT, PPT
+- Limite de 10MB
+- Design premium com gradiente indigo/purple
+- Lista de funcionalidades de análise
