@@ -1,11 +1,21 @@
-import { eq } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { 
+  InsertUser, 
+  users, 
+  documents, 
+  analyses, 
+  plagiarismSources, 
+  aiDetectionResults,
+  InsertDocument,
+  InsertAnalysis,
+  InsertPlagiarismSource,
+  InsertAiDetectionResult
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -89,4 +99,120 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Document operations
+export async function createDocument(doc: InsertDocument) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(documents).values(doc);
+  return result;
+}
+
+export async function getDocumentById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(documents).where(eq(documents.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserDocuments(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(documents)
+    .where(eq(documents.userId, userId))
+    .orderBy(desc(documents.createdAt));
+}
+
+export async function updateDocumentStatus(id: number, status: "pending" | "processing" | "completed" | "failed", extractedText?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const updateData: any = { status };
+  if (extractedText !== undefined) {
+    updateData.extractedText = extractedText;
+  }
+  
+  await db.update(documents).set(updateData).where(eq(documents.id, id));
+}
+
+// Analysis operations
+export async function createAnalysis(analysis: InsertAnalysis) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(analyses).values(analysis);
+  return result;
+}
+
+export async function getAnalysisById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(analyses).where(eq(analyses.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getAnalysisByDocumentId(documentId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(analyses)
+    .where(eq(analyses.documentId, documentId))
+    .orderBy(desc(analyses.createdAt))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserAnalyses(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(analyses)
+    .where(eq(analyses.userId, userId))
+    .orderBy(desc(analyses.createdAt));
+}
+
+export async function updateAnalysis(id: number, data: Partial<InsertAnalysis>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(analyses).set(data).where(eq(analyses.id, id));
+}
+
+// Plagiarism sources operations
+export async function createPlagiarismSource(source: InsertPlagiarismSource) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(plagiarismSources).values(source);
+  return result;
+}
+
+export async function getPlagiarismSourcesByAnalysisId(analysisId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(plagiarismSources)
+    .where(eq(plagiarismSources.analysisId, analysisId))
+    .orderBy(desc(plagiarismSources.similarityScore));
+}
+
+// AI detection results operations
+export async function createAiDetectionResult(result: InsertAiDetectionResult) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const insertResult = await db.insert(aiDetectionResults).values(result);
+  return insertResult;
+}
+
+export async function getAiDetectionResultsByAnalysisId(analysisId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(aiDetectionResults)
+    .where(eq(aiDetectionResults.analysisId, analysisId))
+    .orderBy(desc(aiDetectionResults.aiProbability));
+}
